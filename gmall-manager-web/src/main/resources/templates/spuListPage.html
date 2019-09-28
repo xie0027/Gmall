@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<table id="dgforSpu" class="easyui-datagrid" title="SPU列表"
+       data-options="toolbar:'#tbforSpu',singleSelect:true,collapsible:true,method:'get'">
+
+    <thead>
+    <tr>
+        <th data-options="field:'id',width:80">商品ID</th>
+        <th data-options="field:'spuName',width:100">商品名称</th>
+        <th data-options="field:'description',width:100">商品描述</th>
+        <th data-options="field:'catalog3Id',width:80,align:'right'">三级类目</th>
+
+    </tr>
+    </thead>
+</table>
+
+
+<div id="tbforSpu">
+    <div>
+        <a href="javascript:void(0)" onclick="add_spu_info()" class="easyui-linkbutton"
+           data-options="iconCls:'icon-add',plain:true">添加</a>
+        <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true">编辑</a>
+        <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true">删除</a>
+        <a href="javascript:void(0)" onclick="add_sku_info()" class="easyui-linkbutton"
+           data-options="iconCls:'icon-add',plain:true">添加SKU</a>
+        <a href="javascript:void(0)" onclick="search_sku_list()" class="easyui-linkbutton"
+           data-options="iconCls:'icon-search',plain:true">查看SKU</a>
+    </div>
+
+    <div>
+        <label>
+            <select class="easyui-combobox" name="一级分类" label="一级分类:" style="width: 200px"
+                    data-options="valueField:'id',textField:'name',url:'getCatalog1',
+                    onSelect: function(result){
+                    $('#catg2forSpu').combobox('clear')
+                    var catalog2json = 'getCatalog2?id='+result.id;
+                    $('#catg2forSpu').combobox('reload',catalog2json);
+                    }">
+            </select>
+        </label>
+        <label for="catg2forSpu"></label><select id="catg2forSpu" class="easyui-combobox"
+                                                      name="catg2forSpu" label="二级分类:" style="width: 200px"
+                                                      data-options="valueField:'id',textField:'name',
+                onSelect: function(result){
+                $('#catg3forSpu').combobox('clear')
+                var catalog3json = 'getCatalog3?id='+result.id;
+                $('#catg3forSpu').combobox('reload',catalog3json);
+                }">
+    </select>
+        <label for="catg3forSpu"></label><select id="catg3forSpu" class="easyui-combobox"
+                                                      name="catg3forSpu" label="三级分类:" style="width: 200px"
+                                                      data-options="valueField:'id',textField:'name'">
+    </select>
+        <a href="javascript:void(0)" onclick="reloadSpuList()" class="easyui-linkbutton"
+           data-options="iconCls:'icon-search'">刷新列表</a>
+    </div>
+</div>
+
+<div th:include="spuInfoPage"></div>
+<div th:include="skuListPage"></div>
+<div th:include="skuInfoPage"></div>
+
+<script th:inline="none">
+
+    var catg3ForAttrList = $("#catg3forSpu");
+    var catg3Value = "";
+    var catg3Id = catg3ForAttrList.combobox("getValue");
+    var dgforSpu = $("#dgforSpu");
+    var selected = dgforSpu.datagrid("getSelected");
+
+    catg3ForAttrList.combobox({
+        onChange: function () {
+            reloadSpuList();
+        }
+    });
+
+    function reloadSpuList() {
+
+        catg3Value = catg3ForAttrList.combobox("getValue");
+
+        if (catg3Value == null || catg3Value == "") {
+
+            alert("请选择三级类目")
+
+        } else {
+
+            dgforSpu.datagrid({
+                url: "/getSpuList?catg3Id=" + catg3Value
+            })
+
+        }
+
+    }
+
+
+    function add_spu_info() {
+
+
+        if (catg3Value == null || catg3Value == "") {
+
+            alert("请选择三级类目")
+
+        } else {
+
+            $("#spu_dlg").dialog("open");
+            initSpuInfoDlg();
+            initSpuImgListDatagrid();
+            initUploader();
+        }
+    }
+
+    function search_sku_list() {
+
+
+        if (selected==null){
+            alert("请选择商品属性！");
+            return;
+        }
+
+        //打开SKUlist窗口
+        initskulist_dlg(selected.id,catg3Id);
+    }
+
+    function add_sku_info(){
+
+        if (selected==null){
+            alert("请选择商品属性！");
+            return;
+        }
+
+        initsku_dlg(selected.id);
+    }
+
+
+</script>
+
+</body>
+
+</html>

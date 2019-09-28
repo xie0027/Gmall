@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<table id="dg" class="easyui-datagrid" title="Basic DataGrid"
+       data-options="toolbar:'#tb',singleSelect:true,collapsible:true,method:'get'">
+
+    <thead>
+    <tr>
+        <th data-options="field:'id',width:80">属性</th>
+        <th data-options="field:'attrName',width:100">属性名称</th>
+        <th data-options="field:'catalog3Id',width:80,align:'right'">三级类目</th>
+
+    </tr>
+    </thead>
+</table>
+
+
+<div id="tb">
+    <div>
+        <a href="javascript:add_attr_value()" class="easyui-linkbutton"
+           data-options="iconCls:'icon-add',plain:true">添加</a>
+        <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true">编辑</a>
+        <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true">删除</a>
+    </div>
+
+    <div>
+        <label>
+            <select class="easyui-combobox" name="一级分类" label="一级分类:" style="width: 200px"
+                    data-options="valueField:'id',textField:'name',url:'getCatalog1',
+                    onSelect: function(result){
+                    $('#catg2ForAttrList').combobox('clear')
+                    var catalog2json = 'getCatalog2?id='+result.id;
+                    $('#catg2ForAttrList').combobox('reload',catalog2json);
+                    }">
+            </select>
+        </label>
+        <label for="catg2ForAttrList"></label><select id="catg2ForAttrList" class="easyui-combobox"
+                                                      name="catg2ForAttrList" label="二级分类:" style="width: 200px"
+                                                      data-options="valueField:'id',textField:'name',
+                onSelect: function(result){
+                $('#catg3ForAttrList').combobox('clear')
+                var catalog3json = 'getCatalog3?id='+result.id;
+                $('#catg3ForAttrList').combobox('reload',catalog3json);
+                }">
+    </select>
+        <label for="catg3ForAttrList"></label><select id="catg3ForAttrList" class="easyui-combobox"
+                                                      name="catg3ForAttrList" label="三级分类:" style="width: 200px"
+                                                      data-options="valueField:'id',textField:'name'">
+    </select>
+        <a href="javascript:void(0)" onclick="reloadAttrList()" class="easyui-linkbutton"
+           data-options="iconCls:'icon-search'">刷新属性列表</a>
+    </div>
+</div>
+
+<div id="dlg" class="easyui-dialog" title="属性编辑" data-options="iconCls:'icon-save',closed:true,buttons:'#bb'"
+     style="width:800px;height:600px;padding:10px">
+
+    <span style="margin-top: 10px;margin-bottom: 10px">输入属性：<input class="easyui-textbox" id="input_attr_info"></span>
+
+    <div style="margin-top: 10px">
+        <table id="dg_av" class="easyui-datagrid" title="属性值列表"></table>
+    </div>
+</div>
+
+<div id="bb">
+    <a href="javascript:save_attr_value()" class="easyui-linkbutton">保存</a>
+    <a href="javascript:close_attr_value()" class="easyui-linkbutton">关闭</a>
+</div>
+
+<script th:inline="none">
+
+    var catg3ForAttrList = $("#catg3ForAttrList");
+    var catg3Value = "";
+
+    catg3ForAttrList.combobox({
+        onChange: function () {
+            reloadAttrList();
+        }
+    });
+
+    function reloadAttrList() {
+
+        catg3Value = catg3ForAttrList.combobox("getValue");
+
+        if (catg3Value == null || catg3Value == "") {
+
+            alert("请选择三级类目")
+
+        } else {
+
+            $("#dg").datagrid({
+                url: "/getAttrList?catg3Id=" + catg3Value
+            })
+
+        }
+
+    }
+
+    function save_attr_value() {
+
+        var att_info = $("#input_attr_info").val();
+        var dgRows = $("#dg_av").datagrid("getRows");
+        var jsonObj = {
+            attrName: att_info,
+            catalog3Id: catg3Value
+        };
+        for (var i = 0; i < dgRows.length; i++) {
+
+            jsonObj["attrValueList["+i+"].valueName"] = dgRows[i].valueName;
+        }
+
+        $.post("addAttrInfo", jsonObj, function (result) {
+            if (result) {
+                close_attr_value();
+                reloadAttrList()
+            }else {
+                alert("添加失败，请重试！")
+            }
+        });
+
+
+    }
+
+    function close_attr_value() {
+
+        $("#dlg").dialog("close");
+    }
+
+    function add_attr_value() {
+
+
+        if (catg3Value == null || catg3Value == "") {
+
+            alert("请选择三级类目")
+
+        } else {
+
+            $("#dlg").dialog("open");
+
+            initAttrValueDg();
+        }
+    }
+
+    function initAttrValueDg() {
+
+        var da_av = $("#dg_av").datagrid({
+
+            columns: [[
+                {field: 'id', title: '属性值', width: 200},
+                {
+                    field: 'valueName', title: '属性值名称', width: 400, editor: {
+                        type: 'validatebox', options: {required: "true"}
+                    }
+                }
+            ]],
+
+            toolbar: [{
+                text: "添加",
+                iconCls: 'icon-add',
+                handler: function () {
+                    da_av.datagrid("appendRow", {
+                        id: "",
+                        valueName: "默认属性"
+                    })
+                }
+            }, '-', {
+                text: "删除",
+                iconCls: 'icon-remove',
+                handler: function () {
+                    var selected = da_av.datagrid("getSelected");
+                    var index = da_av.datagrid("getRowIndex", selected);
+                    da_av.datagrid("deleteRow", index)
+                }
+            }],
+
+
+            onDblClickRow: function (rowIndex, rowData) {
+
+                da_av.datagrid("beginEdit", rowIndex);
+
+                var valueName = rowData.valueName;
+
+                $("input.datagrid-editable-input").val(valueName).bind("blur", function (evt) {
+                    da_av.datagrid('endEdit', rowIndex)
+                })
+
+            }
+        })
+    }
+
+</script>
+
+</body>
+
+</html>

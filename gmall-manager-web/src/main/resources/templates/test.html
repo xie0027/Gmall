@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="/easyui/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/easyui/themes/icon.css">
+    <script type="text/javascript" src="/easyui/jquery.min.js"></script>
+    <script type="text/javascript" src="/easyui/jquery.easyui.min.js"></script>
+</head>
+<body>
+
+<div id="dlg" class="easyui-dialog" title="Basic Dialog" data-options="iconCls:'icon-save',buttons:'#bb'"
+     style="width:400px;height:200px;padding:10px">
+
+    输入属性：
+    <table id="dg_av" class="easyui-datagrid" title="属性值列表"></table>
+</div>
+
+
+<div id="bb">
+    <a href="#" class="easyui-linkbutton">保存</a>
+    <a href="javascript:close_attr_value()" class="easyui-linkbutton">关闭</a>
+</div>
+
+</body>
+<script th:inline="none">
+
+    $(function () {
+
+        initAttrValueDg();
+    });
+
+    function close_attr_value() {
+
+        $("#dlg").dialog("close");
+    }
+
+
+    function initAttrValueDg() {
+
+        $("#dg_av").datagrid({
+
+            toolbar: [{
+                iconCls: 'icon-add',
+                handler: function () {
+                    alert('edit')
+                }
+            }, '-', {
+                iconCls: 'icon-remove',
+                handler: function () {
+                    alert('help')
+                }
+            }],
+
+            columns: [[
+                {field: 'id', title: '属性值', width: 100},
+                {field: 'valueName', title: '属性值名称', width: 100},
+            ]]
+        })
+
+    }
+
+</script>
+
+
+</html>
